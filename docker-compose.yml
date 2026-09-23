@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  smart-retail-monitor:
+    build: .
+    container_name: smart-retail-monitor
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Файл выгрузки чеков с кассы — монтируем снаружи, чтобы кассовая система
+      # могла дописывать в него, не пересобирая контейнер.
+      - ./sales_export.txt:/app/sales_export.txt
+      # Файл-флаг режима обслуживания (выкладка товара) — создавайте/удаляйте
+      # его на хосте, контейнер увидит изменение сразу.
+      - ./maintenance.flag:/app/maintenance.flag
+      # Сохраненные кадры-улики для аудита
+      - ./events:/app/events
+    # Раскомментируйте для доступа к GPU (требуется nvidia-container-toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    network_mode: "host"  # упрощает доступ к RTSP-камерам в локальной сети магазина
